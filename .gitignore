@@ -1,0 +1,27 @@
+# macOS
+.DS_Store
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*~
+
+# Local secrets (never commit)
+.envrc
+.envrc.local
+.env
+.env.*
+
+# OpenTofu / Terraform — see also per-context .gitignore files
+**/.terraform/
+**/.terraform.tfstate.lock.info
+**/*.tfstate
+**/*.tfstate.*
+**/*.tfvars
+**/*.tfvars.json
+**/crash.log
+**/crash.*.log
+**/_generated/
+
+# Note: **/.terraform.lock.hcl is intentionally NOT ignored — commit lockfiles.
