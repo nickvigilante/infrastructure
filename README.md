@@ -17,7 +17,7 @@ Future contexts (planned, not yet wired up): `homelab/`.
 - **Tool:** OpenTofu 1.10+ (`brew install opentofu`)
 - **State:** stored in Storj S3-compatible bucket `nickvigilante-tfstate`. State keys mirror context paths.
 - **Secrets:** never committed. Sourced from `~/.cf-opentofu.env` (out-of-repo, `chmod 600`). Each context's README lists the exact env vars it needs.
-- **Pre-commit:** `gitleaks` runs on every commit to catch accidentally-staged secrets. See [`.gitleaks.toml`](./.gitleaks.toml).
+- **Pre-commit:** `gitleaks` runs on every commit to catch accidentally-staged secrets. See [`.gitleaks.toml`](./.gitleaks.toml). After cloning, install gitleaks (`brew install gitleaks`) and enable the hook with `git config core.hooksPath .githooks`.
 - **Branching:** all changes via feature branches + PRs to `main`. Never push to `main` directly.
 
 ## Quickstart
