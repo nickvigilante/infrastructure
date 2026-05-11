@@ -1,0 +1,85 @@
+name: homelab-plan
+
+on:
+  pull_request:
+    paths:
+      - "homelab/**"
+      - ".github/workflows/homelab-plan.yml"
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  plan:
+    name: homelab-plan
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: homelab
+
+    env:
+      TF_VAR_tailscale_oauth_client_id: ${{ secrets.TAILSCALE_OAUTH_CLIENT_ID }}
+      TF_VAR_tailscale_oauth_client_secret: ${{ secrets.TAILSCALE_OAUTH_CLIENT_SECRET }}
+      TF_VAR_github_app_id: ${{ secrets.TF_GITHUB_APP_ID }}
+      TF_VAR_github_app_installation_id: ${{ secrets.TF_GITHUB_APP_INSTALLATION_ID }}
+      TF_VAR_github_app_pem_contents: ${{ secrets.TF_GITHUB_APP_PRIVATE_KEY }}
+      TF_VAR_ci_aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      TF_VAR_ci_aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Stage GitHub App PEM
+        run: |
+          mkdir -p "$HOME/.config/github-app"
+          printf '%s' "${{ secrets.TF_GITHUB_APP_PRIVATE_KEY }}" > "$HOME/.config/github-app/opentofu.pem"
+          chmod 600 "$HOME/.config/github-app/opentofu.pem"
+          echo "TF_VAR_github_app_pem_file=$HOME/.config/github-app/opentofu.pem" >> "$GITHUB_ENV"
+
+      - uses: opentofu/setup-opentofu@v1
+        with:
+          tofu_version: 1.10.0
+          tofu_wrapper: false
+
+      - name: tofu fmt -check
+        run: tofu fmt -check -recursive
+
+      - name: tofu init
+        run: tofu init -input=false
+
+      - name: tofu validate
+        run: tofu validate
+
+      - name: tofu plan
+        id: plan
+        run: |
+          set +e
+          tofu plan -input=false -no-color -out=tfplan 2>&1 | tee plan.txt
+          status=${PIPESTATUS[0]}
+          {
+            echo 'plan<<EOF'
+            sed 's/[\x1b]\[[0-9;]*[A-Za-z]//g' plan.txt
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
+          exit $status
+
+      - name: Post plan to PR
+        if: always() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const plan = `${{ steps.plan.outputs.plan }}`;
+            const max = 60000;
+            const body = plan.length > max
+              ? '### `homelab` tofu plan (truncated — see Actions log for full output)\n\n<details><summary>Plan output</summary>\n\n```hcl\n' + plan.slice(0, max) + '\n…\n```\n\n</details>'
+              : '### `homelab` tofu plan\n\n<details><summary>Plan output</summary>\n\n```hcl\n' + plan + '\n```\n\n</details>';
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body,
+            });
