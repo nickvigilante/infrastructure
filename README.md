@@ -9,8 +9,7 @@ Each top-level directory under this repo is a self-contained OpenTofu workspace 
 | Path | What it manages | State key |
 |------|-----------------|-----------|
 | `cloudflare/nickvigilante-com/` | DNS, zone settings, WAF for `nickvigilante.com` | `cloudflare/nickvigilante-com/terraform.tfstate` |
-
-Future contexts (planned, not yet wired up): `homelab/`.
+| `homelab/` | Tailscale tailnet DNS, GitHub repo settings + branch protection + Actions secrets | `homelab/terraform.tfstate` |
 
 ## Common conventions
 
