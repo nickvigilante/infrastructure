@@ -71,6 +71,10 @@ locals {
       description = "A lightweight password generator written in Python."
       topics      = ["python", "cli", "tools"]
     }
+    homelab = {
+      description = "k3s manifests, Helm values, and host system configs for my home lab on gandalf"
+      topics      = ["homelab", "kubernetes", "k3s", "helm", "jellyfin", "pi-hole"]
+    }
   }
 
   # Merge defaults with per-repo overrides for use by resources below.
