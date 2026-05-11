@@ -15,11 +15,23 @@ resource "cloudflare_ruleset" "zone_custom_firewall" {
     },
     {
       ref         = "c9098adab50747ea960a4ada7f544d69"
-      description = "Dotfiles"
+      description = "Dotfiles - allow curl/bash one-liner install"
       expression  = "(http.request.uri.path eq \"/dotfiles\")"
       action      = "skip"
       action_parameters = {
-        phases = ["http_request_sbfm"]
+        phases = [
+          "http_request_sbfm",
+          "http_request_firewall_managed",
+        ]
+        products = [
+          "bic",
+          "hot",
+          "rateLimit",
+          "securityLevel",
+          "uaBlock",
+          "waf",
+          "zoneLockdown",
+        ]
       }
       logging = {
         enabled = true
