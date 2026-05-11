@@ -42,22 +42,25 @@ export TF_VAR_ci_aws_secret_access_key="$AWS_SECRET_ACCESS_KEY"
 
 ## Quickstart
 
+Two ways to apply: locally (any workstation with the env file) or via GitHub Actions (browser only).
+
+### Locally
+
 ```bash
-# Source the env file
 set -a && source ~/.homelab-opentofu.env && set +a
-
-# Move into this context
 cd homelab/
-
-# First time
-tofu init
-
-# Preview changes
+tofu init    # first time
 tofu plan
-
-# Apply
 tofu apply
 ```
+
+### From the Actions UI
+
+Go to the `infrastructure` repo on GitHub → Actions → "homelab-apply" → **Run workflow**. Two checkboxes:
+- Branch: `main` (default — apply runs against the latest merged code)
+- Dry run: when checked, plan only; uncheck to apply
+
+The workflow init's against the Storj state, plans, and (if not dry-run) applies. The plan and apply outputs land in the Actions run summary. State locking is via the Storj backend, so concurrent applies are prevented.
 
 ## What's in here
 
