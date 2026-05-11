@@ -1,0 +1,100 @@
+name: homelab-apply
+
+# Manual-only trigger. Apply is intentionally not automatic on merge —
+# this workflow exists so you can apply from the GitHub Actions UI instead
+# of having to be at a workstation with the env file sourced.
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Plan only — do not apply"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+# State has its own lock via the Storj S3 backend, but belt-and-suspenders:
+# don't allow two apply runs to start at once. Don't cancel a running apply
+# either — let it finish so state stays consistent.
+concurrency:
+  group: homelab-apply
+  cancel-in-progress: false
+
+jobs:
+  apply:
+    name: homelab-apply
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: homelab
+
+    env:
+      TF_VAR_tailscale_oauth_client_id: ${{ secrets.TAILSCALE_OAUTH_CLIENT_ID }}
+      TF_VAR_tailscale_oauth_client_secret: ${{ secrets.TAILSCALE_OAUTH_CLIENT_SECRET }}
+      TF_VAR_github_app_id: ${{ secrets.TF_GITHUB_APP_ID }}
+      TF_VAR_github_app_installation_id: ${{ secrets.TF_GITHUB_APP_INSTALLATION_ID }}
+      TF_VAR_github_app_pem_contents: ${{ secrets.TF_GITHUB_APP_PRIVATE_KEY }}
+      TF_VAR_ci_aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      TF_VAR_ci_aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Stage GitHub App PEM
+        run: |
+          mkdir -p "$HOME/.config/github-app"
+          printf '%s' "${{ secrets.TF_GITHUB_APP_PRIVATE_KEY }}" > "$HOME/.config/github-app/opentofu.pem"
+          chmod 600 "$HOME/.config/github-app/opentofu.pem"
+          echo "TF_VAR_github_app_pem_file=$HOME/.config/github-app/opentofu.pem" >> "$GITHUB_ENV"
+
+      - uses: opentofu/setup-opentofu@v1
+        with:
+          tofu_version: 1.10.0
+          tofu_wrapper: false
+
+      - name: tofu init
+        run: tofu init -input=false
+
+      - name: tofu plan
+        id: plan
+        run: |
+          set +e
+          tofu plan -input=false -no-color -out=tfplan 2>&1 | tee plan.txt
+          status=${PIPESTATUS[0]}
+          {
+            echo "## homelab \`tofu plan\`"
+            echo
+            echo '```hcl'
+            sed 's/\x1b\[[0-9;]*[A-Za-z]//g' plan.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          exit $status
+
+      - name: Dry-run notice
+        if: ${{ inputs.dry_run }}
+        run: |
+          {
+            echo
+            echo "## Dry run — no apply performed"
+            echo
+            echo "Re-run this workflow with \`dry_run\` unchecked to apply."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: tofu apply
+        if: ${{ !inputs.dry_run }}
+        run: |
+          set +e
+          tofu apply -input=false -no-color tfplan 2>&1 | tee apply.txt
+          status=${PIPESTATUS[0]}
+          {
+            echo
+            echo "## homelab \`tofu apply\`"
+            echo
+            echo '```'
+            sed 's/\x1b\[[0-9;]*[A-Za-z]//g' apply.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          exit $status
