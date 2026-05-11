@@ -21,12 +21,27 @@ resource "github_repository" "managed" {
   allow_rebase_merge          = each.value.allow_rebase_merge
   allow_auto_merge            = each.value.allow_auto_merge
   delete_branch_on_merge      = each.value.delete_branch_on_merge
-  vulnerability_alerts        = each.value.vulnerability_alerts
   web_commit_signoff_required = each.value.web_commit_signoff_required
 
   lifecycle {
     prevent_destroy = true
+    # `vulnerability_alerts` is now managed via the dedicated
+    # `github_repository_vulnerability_alerts` resource below. Ignore any
+    # drift on the deprecated field so removing it from config doesn't
+    # cause Tofu to call the disable API.
+    ignore_changes = [vulnerability_alerts]
   }
+}
+
+# Dependabot vulnerability alerts. Migrated out of the deprecated
+# `github_repository.vulnerability_alerts` argument per provider guidance.
+resource "github_repository_vulnerability_alerts" "alerts" {
+  for_each = {
+    for name, cfg in local.repos_resolved : name => cfg
+    if cfg.vulnerability_alerts
+  }
+
+  repository = github_repository.managed[each.key].name
 }
 
 # Branch protection on `main` for every repo where protect_main = true.
