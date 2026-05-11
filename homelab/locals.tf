@@ -7,7 +7,6 @@ locals {
     has_projects                = false
     has_wiki                    = false
     has_discussions             = false
-    has_downloads               = false
     allow_squash_merge          = true
     allow_merge_commit          = false
     allow_rebase_merge          = true

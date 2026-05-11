@@ -16,7 +16,6 @@ resource "github_repository" "managed" {
   has_projects                = each.value.has_projects
   has_wiki                    = each.value.has_wiki
   has_discussions             = each.value.has_discussions
-  has_downloads               = each.value.has_downloads
   allow_squash_merge          = each.value.allow_squash_merge
   allow_merge_commit          = each.value.allow_merge_commit
   allow_rebase_merge          = each.value.allow_rebase_merge
