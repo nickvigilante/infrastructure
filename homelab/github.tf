@@ -128,3 +128,37 @@ resource "github_actions_secret" "github_app_private_key" {
   secret_name     = "TF_GITHUB_APP_PRIVATE_KEY"
   plaintext_value = var.github_app_pem_contents
 }
+
+# ---------------------------------------------------------------------------
+# Approval gate for the homelab-apply workflow.
+#
+# The workflow runs `tofu apply` against this very context, so an unattended
+# dispatch could overwrite tailnet config or GitHub repo settings before you
+# notice. The environment forces a manual approval click in the Actions UI
+# before apply runs. The plan workflow (PR CI) is unaffected — it doesn't
+# reference an environment.
+#
+# Repo-level Actions secrets above remain in place: the plan workflow needs
+# them, and environment secrets would override them at apply time anyway if
+# we ever want stronger isolation.
+# ---------------------------------------------------------------------------
+data "github_user" "self" {
+  username = var.github_owner
+}
+
+resource "github_repository_environment" "homelab_apply" {
+  repository  = github_repository.managed["infrastructure"].name
+  environment = "homelab-apply"
+
+  reviewers {
+    users = [data.github_user.self.id]
+  }
+
+  # Only protected branches (main) can target this environment. Combined
+  # with `on: workflow_dispatch`, this means an apply can only be launched
+  # from main — feature-branch dispatches will be rejected.
+  deployment_branch_policy {
+    protected_branches     = true
+    custom_branch_policies = false
+  }
+}

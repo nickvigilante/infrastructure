@@ -25,6 +25,10 @@ jobs:
   apply:
     name: homelab-apply
     runs-on: ubuntu-latest
+    # Approval gate. The `homelab-apply` environment is defined in
+    # homelab/github.tf with a required reviewer (you), so the run pauses
+    # at the start of this job until approved in the Actions UI.
+    environment: homelab-apply
     defaults:
       run:
         working-directory: homelab
