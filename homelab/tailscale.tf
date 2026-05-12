@@ -15,17 +15,18 @@ resource "tailscale_dns_preferences" "main" {
   magic_dns = true
 }
 
-# Tailnet policy file. Codifies the current default-allow stance and adds
-# forward-looking structure (tag:homelab, SSH for tagged servers) that no-ops
-# until devices actually advertise the tag.
+# Tailnet policy file.
 #
-# DO NOT tighten the `*:*` rule in the same change that introduces tagging.
-# Switching to a restrictive policy before any device wears tag:homelab will
-# leave the operator unable to reach gandalf over Tailscale. Sequence:
-#   1. (this resource) Codify allow-all + tagOwners + SSH-to-tag-homelab.
-#   2. Advertise tag:homelab on gandalf (`tailscale up --advertise-tags=tag:homelab`)
-#      and approve the tag in the admin UI.
-#   3. Replace the `*:*` rule with restrictive admin/tag-scoped rules.
+# Two ACL rules: (1) tailnet members reach homelab-tagged servers on any
+# port — that's how you reach Jellyfin/Pi-hole/Uptime Kuma on gandalf from
+# your laptop or phone over Tailscale; (2) homelab-tagged servers reach
+# each other for intra-cluster traffic (k3s agent join, kubelet, etc.).
+#
+# No `*:*` allow-all rule. A device that isn't tagged `tag:homelab` and
+# isn't a tailnet member can't reach anything on the homelab side. New
+# servers added later need both: (a) `sudo tailscale up
+# --advertise-tags=tag:homelab` and (b) an entry in `tagOwners` if a new
+# tag is introduced.
 resource "tailscale_acl" "main" {
   acl = jsonencode({
     tagOwners = {
@@ -36,13 +37,21 @@ resource "tailscale_acl" "main" {
     }
 
     acls = [
-      # Phase 1: keep the default-allow rule so nothing breaks for current
-      # devices. Replace with restrictive rules in a follow-up PR after
-      # gandalf is tagged.
+      # Tailnet members (you, plus anyone you ever share into the tailnet)
+      # reach homelab-tagged servers on any port. Covers Jellyfin / Pi-hole
+      # / Uptime Kuma access from your laptop and phone via Tailscale.
       {
         action = "accept"
-        src    = ["*"]
-        dst    = ["*:*"]
+        src    = ["autogroup:member"]
+        dst    = ["tag:homelab:*"]
+      },
+      # Homelab nodes can talk to each other (gandalf today, future Pi
+      # workers tomorrow). Necessary for k3s agent join, kubelet API,
+      # cluster-internal traffic over the tailnet.
+      {
+        action = "accept"
+        src    = ["tag:homelab"]
+        dst    = ["tag:homelab:*"]
       },
     ]
 
@@ -56,8 +65,7 @@ resource "tailscale_acl" "main" {
         dst    = ["autogroup:self"]
         users  = ["autogroup:nonroot", "root"]
       },
-      # Forward-looking: members can SSH into homelab-tagged servers as
-      # `nickv` or `root`. No-op until a device wears tag:homelab.
+      # Members can SSH into homelab-tagged servers as `nickv` or `root`.
       {
         action = "accept"
         src    = ["autogroup:member"]
