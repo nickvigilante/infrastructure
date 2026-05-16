@@ -82,5 +82,19 @@ resource "tailscale_acl" "main" {
         attr   = ["funnel"]
       },
     ]
+
+    # autoApprovers — routes that don't need a human in the admin UI
+    # to click "Approve" on. Scoped narrowly: any device tagged
+    # tag:homelab that advertises itself as an exit node is auto-
+    # approved. Lets us re-provision pi-zero-exit (or any other home-
+    # lab box) with `sudo tailscale up --advertise-exit-node` and have
+    # it become a usable exit node immediately, with no admin click.
+    #
+    # Tag-gated by design: only nodes we've already vouched for (via
+    # the auth-key + ansible flow that applies tag:homelab) can self-
+    # approve exit routing. A random tailnet member device can't.
+    autoApprovers = {
+      exitNode = ["tag:homelab"]
+    }
   })
 }
