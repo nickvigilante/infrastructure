@@ -53,6 +53,20 @@ resource "tailscale_acl" "main" {
         src    = ["tag:homelab"]
         dst    = ["tag:homelab:*"]
       },
+      # Tailnet members can route to the public internet via exit nodes.
+      # Without this, Tailscale's control plane strips `Hostinfo.RoutableIPs`
+      # (the exit-node advertisement) from peer netmaps as a "won't help
+      # you anyway" optimization — even when the routes are approved in
+      # the device's per-machine settings. Symptom: `tailscale exit-node
+      # list` from a member device says "no exit nodes found" despite an
+      # advertised + approved exit node existing in the tailnet.
+      # `autogroup:internet` is Tailscale's special destination representing
+      # everything external to the tailnet, accessible via exit nodes.
+      {
+        action = "accept"
+        src    = ["autogroup:member"]
+        dst    = ["autogroup:internet:*"]
+      },
     ]
 
     ssh = [
