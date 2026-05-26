@@ -80,15 +80,15 @@ resource "github_branch_protection" "main" {
 # Actions secrets for the infrastructure repo so its CI plan workflow can run.
 # Source values come from the same env vars the local user already exports.
 resource "github_actions_secret" "tailscale_oauth_client_id" {
-  repository      = github_repository.managed["infrastructure"].name
-  secret_name     = "TAILSCALE_OAUTH_CLIENT_ID"
-  plaintext_value = var.tailscale_oauth_client_id
+  repository  = github_repository.managed["infrastructure"].name
+  secret_name = "TAILSCALE_OAUTH_CLIENT_ID"
+  value       = var.tailscale_oauth_client_id
 }
 
 resource "github_actions_secret" "tailscale_oauth_client_secret" {
-  repository      = github_repository.managed["infrastructure"].name
-  secret_name     = "TAILSCALE_OAUTH_CLIENT_SECRET"
-  plaintext_value = var.tailscale_oauth_client_secret
+  repository  = github_repository.managed["infrastructure"].name
+  secret_name = "TAILSCALE_OAUTH_CLIENT_SECRET"
+  value       = var.tailscale_oauth_client_secret
 }
 
 # Storj S3 credentials for the state backend. Same access grant used locally.
@@ -106,30 +106,30 @@ variable "ci_aws_secret_access_key" {
 }
 
 resource "github_actions_secret" "aws_access_key_id" {
-  repository      = github_repository.managed["infrastructure"].name
-  secret_name     = "AWS_ACCESS_KEY_ID"
-  plaintext_value = var.ci_aws_access_key_id
+  repository  = github_repository.managed["infrastructure"].name
+  secret_name = "AWS_ACCESS_KEY_ID"
+  value       = var.ci_aws_access_key_id
 }
 
 resource "github_actions_secret" "aws_secret_access_key" {
-  repository      = github_repository.managed["infrastructure"].name
-  secret_name     = "AWS_SECRET_ACCESS_KEY"
-  plaintext_value = var.ci_aws_secret_access_key
+  repository  = github_repository.managed["infrastructure"].name
+  secret_name = "AWS_SECRET_ACCESS_KEY"
+  value       = var.ci_aws_secret_access_key
 }
 
 # GitHub App credentials for CI to authenticate as the App.
 # In CI we use actions/create-github-app-token to mint a short-lived token from
 # these; we don't pass the PEM to Tofu directly in CI.
 resource "github_actions_secret" "github_app_id" {
-  repository      = github_repository.managed["infrastructure"].name
-  secret_name     = "TF_GITHUB_APP_ID"
-  plaintext_value = var.github_app_id
+  repository  = github_repository.managed["infrastructure"].name
+  secret_name = "TF_GITHUB_APP_ID"
+  value       = var.github_app_id
 }
 
 resource "github_actions_secret" "github_app_installation_id" {
-  repository      = github_repository.managed["infrastructure"].name
-  secret_name     = "TF_GITHUB_APP_INSTALLATION_ID"
-  plaintext_value = var.github_app_installation_id
+  repository  = github_repository.managed["infrastructure"].name
+  secret_name = "TF_GITHUB_APP_INSTALLATION_ID"
+  value       = var.github_app_installation_id
 }
 
 variable "github_app_pem_contents" {
@@ -139,9 +139,9 @@ variable "github_app_pem_contents" {
 }
 
 resource "github_actions_secret" "github_app_private_key" {
-  repository      = github_repository.managed["infrastructure"].name
-  secret_name     = "TF_GITHUB_APP_PRIVATE_KEY"
-  plaintext_value = var.github_app_pem_contents
+  repository  = github_repository.managed["infrastructure"].name
+  secret_name = "TF_GITHUB_APP_PRIVATE_KEY"
+  value       = var.github_app_pem_contents
 }
 
 # ---------------------------------------------------------------------------
