@@ -23,13 +23,12 @@ resource "github_repository" "managed" {
   delete_branch_on_merge      = each.value.delete_branch_on_merge
   web_commit_signoff_required = each.value.web_commit_signoff_required
 
+  # `vulnerability_alerts` is managed by the dedicated
+  # `github_repository_vulnerability_alerts` resource below, not here. The
+  # deprecated argument is left unset and no longer referenced (it was only
+  # named in ignore_changes, which is what surfaced its deprecation warning).
   lifecycle {
     prevent_destroy = true
-    # `vulnerability_alerts` is now managed via the dedicated
-    # `github_repository_vulnerability_alerts` resource below. Ignore any
-    # drift on the deprecated field so removing it from config doesn't
-    # cause Tofu to call the disable API.
-    ignore_changes = [vulnerability_alerts]
   }
 }
 
