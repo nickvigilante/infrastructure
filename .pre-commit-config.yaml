@@ -1,0 +1,57 @@
+# Pre-commit hooks for the infrastructure repo. Mirrors the homelab repo's
+# setup. Formats files and scans for secrets before each commit; the same
+# hooks run in CI (.github/workflows/lint.yml) via `pre-commit run --all-files`,
+# so local and CI can't drift.
+#
+# One-time local setup:
+#   brew install pre-commit prettier yamlfmt yamllint betterleaks opentofu
+#   git config --unset core.hooksPath   # drop the old .githooks gitleaks hook
+#   pre-commit install
+#
+# Formatter/linter per file type:
+#   Terraform -> tofu fmt
+#   Markdown  -> prettier
+#   YAML      -> yamlfmt (format, see .yamlfmt) + yamllint (lint)
+#   Secrets   -> betterleaks (replaces gitleaks)
+#   All files -> whitespace / EOF / merge-conflict hygiene
+# (.terraform.lock.hcl is generated — left untouched.)
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: mixed-line-ending
+        args: [--fix=lf]
+      - id: check-merge-conflict
+      - id: check-added-large-files
+
+  - repo: local
+    hooks:
+      - id: tofu-fmt
+        name: tofu fmt (format Terraform)
+        entry: tofu fmt -recursive
+        language: system
+        files: \.tf$
+        pass_filenames: false
+      - id: prettier-markdown
+        name: prettier (format Markdown)
+        entry: prettier --write --prose-wrap preserve
+        language: system
+        files: \.md$
+      - id: yamlfmt
+        name: yamlfmt (format YAML)
+        entry: yamlfmt -conf .yamlfmt
+        language: system
+        files: \.ya?ml$
+      - id: yamllint
+        name: yamllint
+        entry: yamllint -c .github/yamllint.yml
+        language: system
+        files: \.ya?ml$
+
+  - repo: https://github.com/betterleaks/betterleaks
+    rev: v1.3.1
+    hooks:
+      - id: betterleaks

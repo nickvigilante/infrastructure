@@ -39,6 +39,7 @@
 ### Task 4: Scaffold cloudflare/nickvigilante-com/ — IN PROGRESS
 
 **Files:**
+
 - `cloudflare/nickvigilante-com/versions.tf` — required_version 1.10+, cloudflare/cloudflare ~> 5.0
 - `cloudflare/nickvigilante-com/provider.tf` — provider auth via `var.cloudflare_api_token`
 - `cloudflare/nickvigilante-com/backend.tf` — Storj S3 backend, key `cloudflare/nickvigilante-com/terraform.tfstate`, `use_lockfile = true`
@@ -58,6 +59,7 @@ Expected: "Successfully configured the backend s3", "Installing cloudflare/cloud
 If `use_lockfile = true` errors with "conditional writes not supported", set `use_lockfile = false` in `backend.tf` (Storj's S3 gateway may not implement S3 conditional writes). Solo-user, no real lock contention risk.
 
 Verify state object exists:
+
 ```bash
 aws s3 ls s3://nickvigilante-tfstate/cloudflare/nickvigilante-com/ --endpoint-url https://gateway.storjshare.io
 ```
@@ -67,6 +69,7 @@ Commit `.terraform.lock.hcl`.
 ### Task 6: Verify provider auth with a data source
 
 Add `cloudflare/nickvigilante-com/data.tf`:
+
 ```hcl
 data "cloudflare_zone" "this" {
   zone_id = var.cloudflare_zone_id
@@ -102,6 +105,7 @@ Inspect outputs and note any resources cf-terraforming doesn't support (call out
 ### Task 8: Import DNS records
 
 Hand-curate `_generated/dns.tf` into `cloudflare/nickvigilante-com/dns.tf`:
+
 - Rename `terraform_managed_resource_<uuid>` blocks to descriptive names (e.g., `apex_a`, `mx_proton_1`).
 - Replace hardcoded zone IDs with `var.cloudflare_zone_id`.
 - Append `import {}` blocks at the bottom of the file.
@@ -126,12 +130,15 @@ Inspect `_generated/rulesets.tf`. Look for a block with `phase = "http_request_f
 ### Task 11: Add Skip rule for /dotfiles
 
 Reproduce the bug:
+
 ```bash
 curl -sI https://nickvigilante.com/dotfiles | grep -iE "(HTTP|cf-mitigated)"
 ```
+
 Expect `HTTP/2 403`, `cf-mitigated: challenge`.
 
 Add to the top of `cloudflare_ruleset.zone_custom_firewall`'s `rules` list:
+
 ```hcl
 {
   ref         = "skip_bots_for_dotfiles"
@@ -149,15 +156,19 @@ Add to the top of `cloudflare_ruleset.zone_custom_firewall`'s `rules` list:
 `tofu apply`. Wait ~30s for edge propagation.
 
 Verify:
+
 ```bash
 curl -sI https://nickvigilante.com/dotfiles | head -5
 ```
+
 Expect `HTTP/2 302`, `location: https://raw.githubusercontent.com/...`
 
 End-to-end:
+
 ```bash
 bash -c "$(curl -fsSL https://nickvigilante.com/dotfiles)"
 ```
+
 Should run install.sh.
 
 If still 403, expand the `products` list based on the residual `cf-mitigated:` header value.

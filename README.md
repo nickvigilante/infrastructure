@@ -6,17 +6,17 @@ Each top-level directory under this repo is a self-contained OpenTofu workspace 
 
 ## Contexts
 
-| Path | What it manages | State key |
-|------|-----------------|-----------|
-| `cloudflare/nickvigilante-com/` | DNS, zone settings, WAF for `nickvigilante.com` | `cloudflare/nickvigilante-com/terraform.tfstate` |
-| `homelab/` | Tailscale tailnet DNS, GitHub repo settings + branch protection + Actions secrets | `homelab/terraform.tfstate` |
+| Path                            | What it manages                                                                   | State key                                        |
+| ------------------------------- | --------------------------------------------------------------------------------- | ------------------------------------------------ |
+| `cloudflare/nickvigilante-com/` | DNS, zone settings, WAF for `nickvigilante.com`                                   | `cloudflare/nickvigilante-com/terraform.tfstate` |
+| `homelab/`                      | Tailscale tailnet DNS, GitHub repo settings + branch protection + Actions secrets | `homelab/terraform.tfstate`                      |
 
 ## Common conventions
 
 - **Tool:** OpenTofu 1.10+ (`brew install opentofu`)
 - **State:** stored in Storj S3-compatible bucket `nickvigilante-tfstate`. State keys mirror context paths.
 - **Secrets:** never committed. Sourced from `~/.cf-opentofu.env` (out-of-repo, `chmod 600`). Each context's README lists the exact env vars it needs.
-- **Pre-commit:** `gitleaks` runs on every commit to catch accidentally-staged secrets. See [`.gitleaks.toml`](./.gitleaks.toml). After cloning, install gitleaks (`brew install gitleaks`) and enable the hook with `git config core.hooksPath .githooks`.
+- **Pre-commit:** the [pre-commit](https://pre-commit.com) framework ([`.pre-commit-config.yaml`](./.pre-commit-config.yaml)) formats files (`tofu fmt`, prettier for Markdown, yamlfmt for YAML), lints (yamllint), and scans for secrets with [betterleaks](https://github.com/betterleaks/betterleaks) (the maintained gitleaks successor). The same hooks run in CI (`pre-commit run --all-files`). After cloning: `brew install pre-commit prettier yamlfmt yamllint betterleaks opentofu`, then `git config --unset core.hooksPath` and `pre-commit install`.
 - **Branching:** all changes via feature branches + PRs to `main`. Never push to `main` directly.
 
 ## Quickstart
