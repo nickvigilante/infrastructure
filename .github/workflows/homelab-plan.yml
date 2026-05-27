@@ -1,10 +1,16 @@
 name: homelab-plan
 
+# This check is REQUIRED by branch protection (see homelab/locals.tf —
+# required_status_check_contexts = ["homelab-plan"]). It must therefore report
+# a status on EVERY pull request, so the trigger is intentionally NOT
+# path-filtered: a path-filtered workflow that doesn't trigger leaves the
+# required check stuck on "Expected — Waiting for status to be reported"
+# forever, blocking docs-only / cloudflare-only PRs that never touch homelab/.
+# Instead we always run the job and gate the expensive tofu steps on a
+# path-detection — a job whose steps are all skipped still reports success.
+
 on:
   pull_request:
-    paths:
-      - "homelab/**"
-      - ".github/workflows/homelab-plan.yml"
 
 permissions:
   contents: read
@@ -32,7 +38,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Decide whether this PR actually touches the homelab context. When it
+      # doesn't, every step below is skipped and the job reports a green
+      # homelab-plan, satisfying branch protection without running tofu.
+      - name: Detect homelab/ changes
+        uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            homelab:
+              - 'homelab/**'
+              - '.github/workflows/homelab-plan.yml'
+
       - name: Stage GitHub App PEM
+        if: steps.changes.outputs.homelab == 'true'
         run: |
           mkdir -p "$HOME/.config/github-app"
           printf '%s' "${{ secrets.TF_GITHUB_APP_PRIVATE_KEY }}" > "$HOME/.config/github-app/opentofu.pem"
@@ -40,21 +59,26 @@ jobs:
           echo "TF_VAR_github_app_pem_file=$HOME/.config/github-app/opentofu.pem" >> "$GITHUB_ENV"
 
       - uses: opentofu/setup-opentofu@v1
+        if: steps.changes.outputs.homelab == 'true'
         with:
           tofu_version: 1.10.0
           tofu_wrapper: false
 
       - name: tofu fmt -check
+        if: steps.changes.outputs.homelab == 'true'
         run: tofu fmt -check -recursive
 
       - name: tofu init
+        if: steps.changes.outputs.homelab == 'true'
         run: tofu init -input=false
 
       - name: tofu validate
+        if: steps.changes.outputs.homelab == 'true'
         run: tofu validate
 
       - name: tofu plan
         id: plan
+        if: steps.changes.outputs.homelab == 'true'
         run: |
           set +e
           tofu plan -input=false -no-color -out=tfplan 2>&1 | tee plan.txt
@@ -67,7 +91,7 @@ jobs:
           exit $status
 
       - name: Post plan to PR
-        if: always() && github.event_name == 'pull_request'
+        if: always() && steps.changes.outputs.homelab == 'true' && github.event_name == 'pull_request'
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
