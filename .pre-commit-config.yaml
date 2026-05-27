@@ -4,13 +4,14 @@
 # so local and CI can't drift.
 #
 # One-time local setup:
-#   brew install pre-commit prettier yamlfmt yamllint betterleaks opentofu
+#   brew install pre-commit yamlfmt yamllint betterleaks opentofu
 #   git config --unset core.hooksPath   # drop the old .githooks gitleaks hook
 #   pre-commit install
 #
 # Formatter/linter per file type:
 #   Terraform -> tofu fmt
-#   Markdown  -> prettier
+#   Markdown  -> mdformat (+ mdformat-tables; CommonMark-strict, won't mangle
+#                snake_case prose or rewrite embedded code blocks)
 #   YAML      -> yamlfmt (format, see .yamlfmt) + yamllint (lint)
 #   Secrets   -> betterleaks (replaces gitleaks)
 #   All files -> whitespace / EOF / merge-conflict hygiene
@@ -27,6 +28,14 @@ repos:
       - id: check-merge-conflict
       - id: check-added-large-files
 
+  - repo: https://github.com/hukkin/mdformat
+    rev: 0.7.22
+    hooks:
+      - id: mdformat
+        args: [--wrap, keep, --number]
+        additional_dependencies:
+          - mdformat-tables
+
   - repo: local
     hooks:
       - id: tofu-fmt
@@ -35,11 +44,6 @@ repos:
         language: system
         files: \.tf$
         pass_filenames: false
-      - id: prettier-markdown
-        name: prettier (format Markdown)
-        entry: prettier --write --prose-wrap preserve
-        language: system
-        files: \.md$
       - id: yamlfmt
         name: yamlfmt (format YAML)
         entry: yamlfmt -conf .yamlfmt

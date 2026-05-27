@@ -10,7 +10,7 @@
 
 **Repo decision:** This work lives in `nickvigilante/infrastructure` (separate from `nickvigilante/website`) so a future `homelab/` context can share the same Terraform/state/secret-management conventions. See repo `README.md` for the multi-context overview.
 
----
+______________________________________________________________________
 
 ## Tasks
 
@@ -183,7 +183,7 @@ If still 403, expand the `products` list based on the residual `cf-mitigated:` h
 
 In `nickvigilante/website` repo, add a one-liner to `CLAUDE.md` noting that DNS/WAF/zone settings now live in `nickvigilante/infrastructure` and should not be edited in the dashboard. Separate PR in the website repo.
 
----
+______________________________________________________________________
 
 ## Decisions worth noting
 
