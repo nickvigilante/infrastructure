@@ -1,0 +1,32 @@
+name: lint
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  # Runs the same hooks as the local pre-commit setup
+  # (.pre-commit-config.yaml) so local and CI can't drift — tofu fmt,
+  # prettier, yamlfmt, yamllint, and the betterleaks secret scan. Fails if
+  # any hook would modify a committed file.
+  pre-commit:
+    name: pre-commit (format + lint + secrets)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+      - uses: actions/setup-node@v4
+      - uses: opentofu/setup-opentofu@v1
+        with:
+          tofu_version: 1.12.0
+      - name: Install the tools the repo:local hooks call
+        run: |
+          set -euo pipefail
+          npm install -g prettier@3
+          go install github.com/google/yamlfmt/cmd/yamlfmt@v0.21.0
+          pip install yamllint==1.35.1 pre-commit
+          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
+      - name: pre-commit run --all-files
+        run: pre-commit run --all-files --show-diff-on-failure

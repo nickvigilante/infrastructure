@@ -76,4 +76,3 @@ resource "cloudflare_dns_record" "spf" {
   ttl      = 1
   settings = {}
 }
-

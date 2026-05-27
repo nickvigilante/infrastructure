@@ -57,6 +57,7 @@ tofu apply
 ### From the Actions UI
 
 Go to the `infrastructure` repo on GitHub → Actions → "homelab-apply" → **Run workflow**. Two checkboxes:
+
 - Branch: `main` (default — apply runs against the latest merged code)
 - Dry run: when checked, plan only; uncheck to apply
 
@@ -64,16 +65,16 @@ The workflow init's against the Storj state, plans, and (if not dry-run) applies
 
 ## What's in here
 
-| File | Purpose |
-|------|---------|
-| `versions.tf` | Required provider versions + minimum tofu version |
-| `backend.tf` | Storj S3 backend (`s3://nickvigilante-tfstate/homelab/terraform.tfstate`) |
-| `providers.tf` | tailscale + github provider configs |
-| `variables.tf` | Input variables (all sourced from env via `TF_VAR_*`) |
-| `locals.tf` | Per-repo configuration map; add new repos here |
-| `tailscale.tf` | Tailnet DNS settings |
-| `github.tf` | Repo settings, branch protection, Actions secrets |
-| `outputs.tf` | Useful outputs (managed repo list, protected repo list) |
+| File           | Purpose                                                                   |
+| -------------- | ------------------------------------------------------------------------- |
+| `versions.tf`  | Required provider versions + minimum tofu version                         |
+| `backend.tf`   | Storj S3 backend (`s3://nickvigilante-tfstate/homelab/terraform.tfstate`) |
+| `providers.tf` | tailscale + github provider configs                                       |
+| `variables.tf` | Input variables (all sourced from env via `TF_VAR_*`)                     |
+| `locals.tf`    | Per-repo configuration map; add new repos here                            |
+| `tailscale.tf` | Tailnet DNS settings                                                      |
+| `github.tf`    | Repo settings, branch protection, Actions secrets                         |
+| `outputs.tf`   | Useful outputs (managed repo list, protected repo list)                   |
 
 ## Importing existing resources on first apply
 

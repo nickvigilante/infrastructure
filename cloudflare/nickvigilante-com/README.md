@@ -39,12 +39,12 @@ tofu apply    # apply changes
 
 ## What's managed
 
-| File | Resources |
-|------|-----------|
-| [`dns.tf`](./dns.tf) | All 7 DNS records (A, CNAME, NS×2, TXT×3 for SPF/DMARC/DKIM) |
-| [`waf.tf`](./waf.tf) | The `http_request_firewall_custom` ruleset and its rules |
+| File                                       | Resources                                                                   |
+| ------------------------------------------ | --------------------------------------------------------------------------- |
+| [`dns.tf`](./dns.tf)                       | All 7 DNS records (A, CNAME, NS×2, TXT×3 for SPF/DMARC/DKIM)                |
+| [`waf.tf`](./waf.tf)                       | The `http_request_firewall_custom` ruleset and its rules                    |
 | [`bot_management.tf`](./bot_management.tf) | Bot Fight Mode, AI bots protection, crawler protection, JS challenge enable |
-| [`data.tf`](./data.tf) | Read-only zone lookup (sanity check) |
+| [`data.tf`](./data.tf)                     | Read-only zone lookup (sanity check)                                        |
 
 ## What's NOT managed (still dashboard-only)
 
