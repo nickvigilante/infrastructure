@@ -19,6 +19,7 @@ resource "coderd_agents_mcp_server" "todoist" {
   display_name = "Todoist"
   slug         = "todoist"
   description  = "Tasks, projects, and comments in Todoist."
+  icon_url     = "https://todoist.com/favicon.ico"
   url          = "https://ai.todoist.net/mcp"
 
   auth_type      = "oauth2"
@@ -41,8 +42,8 @@ resource "coderd_agents_mcp_server" "todoist" {
 # creating this resource fails discovery. Coder also has to be allowed to reach
 # gandalf's private addresses (CODER_MCP_ALLOWED_PRIVATE_CIDRS, homelab #204).
 #
-# This server was created by hand before this context managed it, and it holds
-# the OAuth client that discovery registered; see imports.tf.
+# This server was created by hand before this context managed it; see
+# imports.tf.
 resource "coderd_agents_mcp_server" "outline" {
   display_name = "Outline"
   slug         = "outline"
@@ -72,6 +73,7 @@ resource "coderd_agents_mcp_server" "home_assistant" {
   display_name = "Home Assistant"
   slug         = "home-assistant"
   description  = "Read and control the entities exposed to Assist."
+  icon_url     = "https://www.home-assistant.io/images/favicon-192x192.png"
   url          = "https://home-assistant.vigihome.net/api/mcp/assist"
 
   auth_type                = "api_key"
