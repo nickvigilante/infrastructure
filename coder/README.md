@@ -31,8 +31,9 @@ Nothing is written to disk, and the secret variables are ephemeral and only feed
 
 ### Once, in Bitwarden Secrets Manager
 
-1. Create a project named `homelab-iac`.
-   Keep it separate from `homelab`, whose secrets the cluster reads through ESO.
+1. Create a project named `Homelab-IaC`.
+   The wrapper matches the name exactly, including case, so spell it that way or set `BWS_PROJECT_NAME`.
+   Keep it separate from `Homelab`, whose secrets the cluster reads through ESO.
 
 2. Add three secrets to it.
    Secret names become environment variable names, so spell them exactly like this.
@@ -43,7 +44,7 @@ Nothing is written to disk, and the secret variables are ephemeral and only feed
    | `TF_VAR_raindrop_oauth_client_secret` | Client secret of that app                                                                  |
    | `TF_VAR_home_assistant_mcp_token`     | Home Assistant long-lived access token (profile → Security)                                |
 
-3. Create a machine account named `operator` with Read access to `homelab-iac` only.
+3. Create a machine account named `operator` with Read access to `Homelab-IaC` only.
 
 4. Create one access token for it per computer, named for the computer, with an expiry.
    A lost machine then costs one revocation.
@@ -59,7 +60,7 @@ Nothing is written to disk, and the secret variables are ephemeral and only feed
 3. Load the Storj state credentials into your shell: `set -a && source ~/.homelab-opentofu.env && set +a`.
 
 Then use the wrapper in place of `tofu`: `./tofu.sh init`, `./tofu.sh plan`, `./tofu.sh apply`.
-It finds the `homelab-iac` project by name, checks that all three secrets exist, and reports any that are missing by name only.
+It finds the `Homelab-IaC` project by name, checks that all three secrets exist, and reports any that are missing by name only.
 
 ## First apply
 

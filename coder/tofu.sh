@@ -10,7 +10,7 @@
 # token is minted for this run and revoked when it exits. See README.md.
 set -euo pipefail
 
-BWS_PROJECT_NAME="${BWS_PROJECT_NAME:-homelab-iac}"
+BWS_PROJECT_NAME="${BWS_PROJECT_NAME:-Homelab-IaC}"
 BWS_KEYCHAIN_SERVICE="${BWS_KEYCHAIN_SERVICE:-homelab-bws-operator}"
 BWS_TOKEN_FILE="${BWS_TOKEN_FILE:-$HOME/.config/bws/operator-token}"
 CODER_TOKEN_LIFETIME="${CODER_TOKEN_LIFETIME:-1h}"
