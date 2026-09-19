@@ -40,10 +40,14 @@ resource "coderd_agents_mcp_server" "todoist" {
 # MCP must be switched on in Outline first (Settings -> Workspace -> AI), or
 # creating this resource fails discovery. Coder also has to be allowed to reach
 # gandalf's private addresses (CODER_MCP_ALLOWED_PRIVATE_CIDRS, homelab #204).
+#
+# This server was created by hand before this context managed it, and it holds
+# the OAuth client that discovery registered; see imports.tf.
 resource "coderd_agents_mcp_server" "outline" {
   display_name = "Outline"
   slug         = "outline"
   description  = "Search and edit the homelab wiki."
+  icon_url     = "https://www.getoutline.com/favicon.png"
   url          = "https://docs.vigihome.net/mcp"
 
   auth_type      = "oauth2"
