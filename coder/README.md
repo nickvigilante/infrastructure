@@ -71,13 +71,15 @@ The order matters, because Coder runs OAuth discovery from inside its own pod at
 2. In Outline, enable MCP under Settings → Workspace → AI.
 3. In Home Assistant, check the MCP Server integration is set up and expose only the entities you want agents to see to Assist.
    Then create the long-lived access token and store it as `TF_VAR_home_assistant_mcp_token` in Bitwarden.
-4. Confirm the Raindrop server exists in Coder with the slug `raindrop`, and that its Raindrop app's redirect URL is still Coder's callback for it.
-   `imports.tf` adopts it rather than recreating it, because recreating would change the server ID in the callback URL.
+4. Check which servers already exist in Coder.
+   Raindrop (slug `raindrop`) and Outline (slug `outline`) were created by hand, and `imports.tf` adopts them rather than recreating them, because recreating would change the server ID and drop users' stored tokens.
+   Raindrop's app also needs its redirect URL to still be Coder's callback for it.
+   Creating a server that already exists fails with a 409, so add an import block for any other one that does.
 5. Run `./tofu.sh init` and `./tofu.sh plan`, and review the plan before `./tofu.sh apply`.
 6. In a Coder Agents chat, turn each server on, and click Auth for the OAuth ones (Todoist, Outline, Raindrop).
 
-Expect the first plan to import Raindrop and create the other three.
-Raindrop will also show an in-place update for the tool deny list and the write-only secret.
+Expect the first plan to import Raindrop and Outline and create the other two.
+Both imported servers will also show an in-place update for the tool deny list and the write-only secrets.
 Stop and investigate if the plan changes its URL, client ID, or token URL, because those invalidate every user's stored token.
 
 ## Day to day
