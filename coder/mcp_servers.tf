@@ -6,7 +6,7 @@
 # Coder runs OAuth discovery and dynamic client registration only when a server
 # is *created* with auth_type = "oauth2" and no manual endpoints. Updates never
 # re-run it. To redo discovery, replace the resource:
-#   tofu apply -replace=coderd_agents_mcp_server.<name>
+#   ./tofu.sh apply -replace=coderd_agents_mcp_server.<name>
 
 # Todoist -- hosted by Todoist, per-user OAuth.
 #
