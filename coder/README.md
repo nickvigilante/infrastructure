@@ -23,24 +23,43 @@ Coder is only reachable over the tailnet, so GitHub-hosted runners can't plan or
 It is deliberately not part of the `homelab-plan` and `homelab-apply` workflows.
 Run it from a machine on the tailnet.
 
-## Env vars required at apply time
+## Secrets
 
-Source `~/.homelab-opentofu.env`, which already exports the Storj state credentials, and add:
+The static secrets live in Bitwarden Secrets Manager, and `./tofu.sh` runs `tofu` with them injected for that one command.
+The Coder admin token is minted for the run and revoked when it exits, or expires on its own after an hour if the revoke fails.
+Nothing is written to disk, and the secret variables are ephemeral and only feed write-only attributes, so they never reach state or a saved plan.
 
-```bash
-# Session token of a Coder admin, created with `coder tokens create`.
-export TF_VAR_coder_session_token="..."
+### Once, in Bitwarden Secrets Manager
 
-# The Raindrop app registered for Coder (https://app.raindrop.io/settings/integrations).
-export TF_VAR_raindrop_oauth_client_id="..."
-export TF_VAR_raindrop_oauth_client_secret="..."
+1. Create a project named `homelab-iac`.
+   Keep it separate from `homelab`, whose secrets the cluster reads through ESO.
 
-# Home Assistant long-lived access token (profile -> Security).
-export TF_VAR_home_assistant_mcp_token="..."
-```
+2. Add three secrets to it.
+   Secret names become environment variable names, so spell them exactly like this.
 
-The values belong in Bitwarden with the rest of the homelab secrets, never in this repo.
-The secret variables are ephemeral and only feed write-only attributes, so they never reach state or a saved plan.
+   | Secret                                | Value                                                                                      |
+   | ------------------------------------- | ------------------------------------------------------------------------------------------ |
+   | `TF_VAR_raindrop_oauth_client_id`     | Client ID of the Raindrop app registered for Coder (app.raindrop.io/settings/integrations) |
+   | `TF_VAR_raindrop_oauth_client_secret` | Client secret of that app                                                                  |
+   | `TF_VAR_home_assistant_mcp_token`     | Home Assistant long-lived access token (profile → Security)                                |
+
+3. Create a machine account named `operator` with Read access to `homelab-iac` only.
+
+4. Create one access token for it per computer, named for the computer, with an expiry.
+   A lost machine then costs one revocation.
+
+### On each computer
+
+1. Install `bws`, `jq`, and the `coder` CLI, and log in to Coder as an admin with `coder login`.
+2. Store that computer's access token where the wrapper looks for it, in this order.
+   - The `BWS_ACCESS_TOKEN` environment variable.
+   - On macOS, a Keychain item.
+     `security add-generic-password -U -a "$USER" -s homelab-bws-operator -w` prompts for the token, so it never lands in your shell history.
+   - A file at `~/.config/bws/operator-token` with mode 600.
+3. Load the Storj state credentials into your shell: `set -a && source ~/.homelab-opentofu.env && set +a`.
+
+Then use the wrapper in place of `tofu`: `./tofu.sh init`, `./tofu.sh plan`, `./tofu.sh apply`.
+It finds the `homelab-iac` project by name, checks that all three secrets exist, and reports any that are missing by name only.
 
 ## First apply
 
@@ -50,10 +69,10 @@ The order matters, because Coder runs OAuth discovery from inside its own pod at
    Without it Coder's SSRF guard blocks Outline and Home Assistant, and creating them fails.
 2. In Outline, enable MCP under Settings → Workspace → AI.
 3. In Home Assistant, check the MCP Server integration is set up and expose only the entities you want agents to see to Assist.
-   Then create the long-lived access token.
+   Then create the long-lived access token and store it as `TF_VAR_home_assistant_mcp_token` in Bitwarden.
 4. Confirm the Raindrop server exists in Coder with the slug `raindrop`, and that its Raindrop app's redirect URL is still Coder's callback for it.
    `imports.tf` adopts it rather than recreating it, because recreating would change the server ID in the callback URL.
-5. Load the env vars, then `tofu init`, `tofu plan`, and review the plan before `tofu apply`.
+5. Run `./tofu.sh init` and `./tofu.sh plan`, and review the plan before `./tofu.sh apply`.
 6. In a Coder Agents chat, turn each server on, and click Auth for the OAuth ones (Todoist, Outline, Raindrop).
 
 Expect the first plan to import Raindrop and create the other three.
@@ -62,10 +81,10 @@ Stop and investigate if the plan changes its URL, client ID, or token URL, becau
 
 ## Day to day
 
-- **Rotate a secret:** change the value in your env file, then bump the matching `*_wo_version` in `mcp_servers.tf`.
+- **Rotate a secret:** change the value in Bitwarden, then bump the matching `*_wo_version` in `mcp_servers.tf`.
   Write-only values are not tracked in state, so the version number is what tells OpenTofu to send it again.
 - **Redo OAuth discovery:** Coder only runs discovery when a server is created.
-  Use `tofu apply -replace=coderd_agents_mcp_server.<name>`, which also drops users' stored tokens.
+  Use `./tofu.sh apply -replace=coderd_agents_mcp_server.<name>`, which also drops users' stored tokens.
 - **Add a server:** copy a block in `mcp_servers.tf`.
   Try `auth_type = "oauth2"` with no OAuth fields first, since a failed discovery rejects the create and leaves nothing behind.
   Fall back to a static header, or a hand-registered client as with Raindrop, when the provider doesn't allow dynamic registration.
