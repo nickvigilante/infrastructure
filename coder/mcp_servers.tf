@@ -60,11 +60,15 @@ resource "coderd_agents_mcp_server" "outline" {
 # owner. What the agent can do is bounded by the entities exposed to Assist in
 # Home Assistant, not by anything here. Reached through Traefik at the public
 # hostname, which is the path Home Assistant's trusted_proxies already covers.
+#
+# The URL pins the Assist API. The plain /api/mcp path is ambiguous once more
+# than one LLM API exists, and Home Assistant only lets administrators connect
+# to any API other than Assist.
 resource "coderd_agents_mcp_server" "home_assistant" {
   display_name = "Home Assistant"
   slug         = "home-assistant"
   description  = "Read and control the entities exposed to Assist."
-  url          = "https://home-assistant.vigihome.net/api/mcp"
+  url          = "https://home-assistant.vigihome.net/api/mcp/assist"
 
   auth_type                = "api_key"
   api_key_header           = "Authorization"
