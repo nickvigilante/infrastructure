@@ -10,6 +10,7 @@ Each top-level directory under this repo is a self-contained OpenTofu workspace 
 | ------------------------------- | --------------------------------------------------------------------------------- | ------------------------------------------------ |
 | `cloudflare/nickvigilante-com/` | DNS, zone settings, WAF for `nickvigilante.com`                                   | `cloudflare/nickvigilante-com/terraform.tfstate` |
 | `homelab/`                      | Tailscale tailnet DNS, GitHub repo settings + branch protection + Actions secrets | `homelab/terraform.tfstate`                      |
+| `coder/`                        | MCP server registrations for Coder Agents (applied locally, tailnet-only)         | `coder/terraform.tfstate`                        |
 
 ## Common conventions
 
