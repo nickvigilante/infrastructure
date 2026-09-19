@@ -92,6 +92,7 @@ resource "coderd_agents_mcp_server" "raindrop" {
   display_name = "Raindrop"
   slug         = "raindrop"
   description  = "Search and organise Raindrop bookmarks."
+  icon_url     = "https://raindrop.io/favicon.ico"
   url          = "https://api.raindrop.io/rest/v2/ai/mcp"
 
   auth_type                       = "oauth2"
