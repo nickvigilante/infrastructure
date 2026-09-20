@@ -6,12 +6,14 @@ Tracking issue: [homelab#204](https://github.com/nickvigilante/homelab/issues/20
 
 ## What's managed
 
-| Server         | URL                                                  | Auth                                | Why                                                                      |
-| -------------- | ---------------------------------------------------- | ----------------------------------- | ------------------------------------------------------------------------ |
-| Todoist        | `https://ai.todoist.net/mcp`                         | OAuth, discovered on create         | Todoist allows dynamic client registration from any client.              |
-| Outline        | `https://docs.vigihome.net/mcp`                      | OAuth, discovered on create         | Outline serves its own OAuth metadata and registration endpoint.         |
-| Home Assistant | `https://home-assistant.vigihome.net/api/mcp/assist` | Static long-lived token in a header | Home Assistant has no dynamic client registration.                       |
-| Raindrop       | `https://api.raindrop.io/rest/v2/ai/mcp`             | OAuth, hand-registered client       | Raindrop advertises registration but only allows pre-registered clients. |
+| Server         | URL                                                           | Auth                                | Why                                                                         |
+| -------------- | ------------------------------------------------------------- | ----------------------------------- | --------------------------------------------------------------------------- |
+| Todoist        | `https://ai.todoist.net/mcp`                                  | OAuth, discovered on create         | Todoist allows dynamic client registration from any client.                 |
+| Outline        | `https://docs.vigihome.net/mcp`                               | OAuth, discovered on create         | Outline serves its own OAuth metadata and registration endpoint.            |
+| Home Assistant | `https://home-assistant.vigihome.net/api/mcp/assist`          | Static long-lived token in a header | Home Assistant has no dynamic client registration.                          |
+| Raindrop       | `https://api.raindrop.io/rest/v2/ai/mcp`                      | OAuth, hand-registered client       | Raindrop advertises registration but only allows pre-registered clients.    |
+| Kubernetes     | `http://kubernetes-mcp.claude-mcp.svc.cluster.local:8080/mcp` | None, gated by NetworkPolicy        | Read-only cluster view, reachable only from the `coder` namespace.          |
+| Grafana        | `http://grafana-mcp.claude-mcp.svc.cluster.local:8000/mcp`    | None, gated by NetworkPolicy        | Read-only dashboards and PromQL, reachable only from the `coder` namespace. |
 
 Every server is `default_off`, so users opt in per chat.
 Destructive tools are denied where the upstream tool names are known.
@@ -67,7 +69,7 @@ It finds the `Homelab-IaC` project by name, checks that all three secrets exist,
 The order matters, because Coder runs OAuth discovery from inside its own pod at creation time.
 
 1. Merge homelab#204's `CODER_MCP_ALLOWED_PRIVATE_CIDRS` change and let Flux reconcile it.
-   Without it Coder's SSRF guard blocks Outline and Home Assistant, and creating them fails.
+   Without the entries from homelab#204, homelab#184, and homelab#186, Coder's SSRF guard blocks Outline, Home Assistant, Kubernetes, and Grafana, and creating them fails.
 2. In Outline, enable MCP under Settings → Workspace → AI.
 3. In Home Assistant, check the MCP Server integration is set up and expose only the entities you want agents to see to Assist.
    Then create the long-lived access token and store it as `TF_VAR_home_assistant_mcp_token` in Bitwarden.
@@ -78,7 +80,7 @@ The order matters, because Coder runs OAuth discovery from inside its own pod at
 5. Run `./tofu.sh init` and `./tofu.sh plan`, and review the plan before `./tofu.sh apply`.
 6. In a Coder Agents chat, turn each server on, and click Auth for the OAuth ones (Todoist, Outline, Raindrop).
 
-Expect the first plan to import Raindrop and Outline and create the other two.
+Expect the first plan to import Raindrop and Outline and create the other four.
 Both imported servers will also show an in-place update for the tool deny list and the write-only secrets.
 Stop and investigate if the plan changes its URL, client ID, or token URL, because those invalidate every user's stored token.
 
