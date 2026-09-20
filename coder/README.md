@@ -69,7 +69,7 @@ It finds the `Homelab-IaC` project by name, checks that all three secrets exist,
 The order matters, because Coder runs OAuth discovery from inside its own pod at creation time.
 
 1. Merge homelab#204's `CODER_MCP_ALLOWED_PRIVATE_CIDRS` change and let Flux reconcile it.
-   Without it Coder's SSRF guard blocks Outline and Home Assistant, and creating them fails.
+   Without the entries from homelab#204, homelab#184, and homelab#186, Coder's SSRF guard blocks Outline, Home Assistant, Kubernetes, and Grafana, and creating them fails.
 2. In Outline, enable MCP under Settings → Workspace → AI.
 3. In Home Assistant, check the MCP Server integration is set up and expose only the entities you want agents to see to Assist.
    Then create the long-lived access token and store it as `TF_VAR_home_assistant_mcp_token` in Bitwarden.
@@ -80,7 +80,7 @@ The order matters, because Coder runs OAuth discovery from inside its own pod at
 5. Run `./tofu.sh init` and `./tofu.sh plan`, and review the plan before `./tofu.sh apply`.
 6. In a Coder Agents chat, turn each server on, and click Auth for the OAuth ones (Todoist, Outline, Raindrop).
 
-Expect the first plan to import Raindrop and Outline and create the other two.
+Expect the first plan to import Raindrop and Outline and create the other four.
 Both imported servers will also show an in-place update for the tool deny list and the write-only secrets.
 Stop and investigate if the plan changes its URL, client ID, or token URL, because those invalidate every user's stored token.
 
