@@ -118,3 +118,39 @@ resource "coderd_agents_mcp_server" "raindrop" {
   enabled      = true
   transport    = "streamable_http"
 }
+
+# Kubernetes -- read-only view of the gandalf cluster, in-cluster.
+#
+# Served by k8s/claude-mcp in the homelab repo (#186). It is reachable only from
+# the coder namespace, which is the access gate, so there is no auth here. The
+# server runs as a `view`-bound ServiceAccount with read_only on and Secrets
+# denied. Coder's SSRF guard allows the address through
+# CODER_MCP_ALLOWED_PRIVATE_CIDRS (10.43.0.201/32).
+resource "coderd_agents_mcp_server" "kubernetes" {
+  display_name = "Kubernetes"
+  slug         = "kubernetes"
+  description  = "Read-only view of the gandalf cluster: workloads, events, and pod logs."
+  url          = "http://kubernetes-mcp.claude-mcp.svc.cluster.local:8080/mcp"
+
+  auth_type    = "none"
+  availability = "default_off"
+  enabled      = true
+  transport    = "streamable_http"
+}
+
+# Grafana -- read-only dashboards and PromQL, in-cluster.
+#
+# Served by k8s/claude-mcp in the homelab repo (#184). Same access gate as the
+# Kubernetes server. It reaches Grafana with a Viewer service-account token
+# held in the cluster, not by Coder (10.43.0.200/32 is allowlisted).
+resource "coderd_agents_mcp_server" "grafana" {
+  display_name = "Grafana"
+  slug         = "grafana"
+  description  = "Read-only Grafana dashboards and Prometheus queries."
+  url          = "http://grafana-mcp.claude-mcp.svc.cluster.local:8000/mcp"
+
+  auth_type    = "none"
+  availability = "default_off"
+  enabled      = true
+  transport    = "streamable_http"
+}

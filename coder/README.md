@@ -6,12 +6,14 @@ Tracking issue: [homelab#204](https://github.com/nickvigilante/homelab/issues/20
 
 ## What's managed
 
-| Server         | URL                                                  | Auth                                | Why                                                                      |
-| -------------- | ---------------------------------------------------- | ----------------------------------- | ------------------------------------------------------------------------ |
-| Todoist        | `https://ai.todoist.net/mcp`                         | OAuth, discovered on create         | Todoist allows dynamic client registration from any client.              |
-| Outline        | `https://docs.vigihome.net/mcp`                      | OAuth, discovered on create         | Outline serves its own OAuth metadata and registration endpoint.         |
-| Home Assistant | `https://home-assistant.vigihome.net/api/mcp/assist` | Static long-lived token in a header | Home Assistant has no dynamic client registration.                       |
-| Raindrop       | `https://api.raindrop.io/rest/v2/ai/mcp`             | OAuth, hand-registered client       | Raindrop advertises registration but only allows pre-registered clients. |
+| Server         | URL                                                           | Auth                                | Why                                                                         |
+| -------------- | ------------------------------------------------------------- | ----------------------------------- | --------------------------------------------------------------------------- |
+| Todoist        | `https://ai.todoist.net/mcp`                                  | OAuth, discovered on create         | Todoist allows dynamic client registration from any client.                 |
+| Outline        | `https://docs.vigihome.net/mcp`                               | OAuth, discovered on create         | Outline serves its own OAuth metadata and registration endpoint.            |
+| Home Assistant | `https://home-assistant.vigihome.net/api/mcp/assist`          | Static long-lived token in a header | Home Assistant has no dynamic client registration.                          |
+| Raindrop       | `https://api.raindrop.io/rest/v2/ai/mcp`                      | OAuth, hand-registered client       | Raindrop advertises registration but only allows pre-registered clients.    |
+| Kubernetes     | `http://kubernetes-mcp.claude-mcp.svc.cluster.local:8080/mcp` | None, gated by NetworkPolicy        | Read-only cluster view, reachable only from the `coder` namespace.          |
+| Grafana        | `http://grafana-mcp.claude-mcp.svc.cluster.local:8000/mcp`    | None, gated by NetworkPolicy        | Read-only dashboards and PromQL, reachable only from the `coder` namespace. |
 
 Every server is `default_off`, so users opt in per chat.
 Destructive tools are denied where the upstream tool names are known.
