@@ -129,16 +129,16 @@ migration never leaves a repo unprotected:
 
 Field mapping, classic → ruleset (verified against the `integrations/github` provider docs):
 
-| Classic (`github_branch_protection`) | Ruleset (`github_repository_ruleset`) |
-| --- | --- |
-| `required_pull_request_reviews { required_approving_review_count, dismiss_stale_reviews, require_code_owner_reviews }` | `rules.pull_request { required_approving_review_count, dismiss_stale_reviews_on_push, require_code_owner_review }` |
-| `require_conversation_resolution` | `rules.pull_request.required_review_thread_resolution` |
-| (implicit — `allow_squash_merge`/`allow_merge_commit`/`allow_rebase_merge` on `github_repository`) | `rules.pull_request.allowed_merge_methods` — **required, min 1 entry**; derive from the same three repo-level merge-method booleans |
-| `required_status_checks { strict, contexts = [...] }` | `rules.required_status_checks { strict_required_status_checks_policy = ..., required_check { context = "..." } }` — **`required_check` is a repeated nested block, not a flat list of strings** |
-| `allows_deletions = false` | `rules.deletion = true` (plain boolean, not a presence-block) |
-| `allows_force_pushes = false` | `rules.non_fast_forward = true` (plain boolean, not a presence-block) |
-| `pattern = "main"` | `conditions.ref_name.include = ["~DEFAULT_BRANCH"]`, `conditions.ref_name.exclude = []` |
-| `enforce_admins = false` (implicit, blanket bypass) | `bypass_actors { actor_type = "User", actor_id = <your numeric GitHub user ID, e.g. via data.github_user.self.id>, bypass_mode = "always" }` (explicit, audited) |
+| Classic (`github_branch_protection`)                                                                                   | Ruleset (`github_repository_ruleset`)                                                                                                                                                           |
+| ---------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `required_pull_request_reviews { required_approving_review_count, dismiss_stale_reviews, require_code_owner_reviews }` | `rules.pull_request { required_approving_review_count, dismiss_stale_reviews_on_push, require_code_owner_review }`                                                                              |
+| `require_conversation_resolution`                                                                                      | `rules.pull_request.required_review_thread_resolution`                                                                                                                                          |
+| (implicit — `allow_squash_merge`/`allow_merge_commit`/`allow_rebase_merge` on `github_repository`)                     | `rules.pull_request.allowed_merge_methods` — **required, min 1 entry**; derive from the same three repo-level merge-method booleans                                                             |
+| `required_status_checks { strict, contexts = [...] }`                                                                  | `rules.required_status_checks { strict_required_status_checks_policy = ..., required_check { context = "..." } }` — **`required_check` is a repeated nested block, not a flat list of strings** |
+| `allows_deletions = false`                                                                                             | `rules.deletion = true` (plain boolean, not a presence-block)                                                                                                                                   |
+| `allows_force_pushes = false`                                                                                          | `rules.non_fast_forward = true` (plain boolean, not a presence-block)                                                                                                                           |
+| `pattern = "main"`                                                                                                     | `conditions.ref_name.include = ["~DEFAULT_BRANCH"]`, `conditions.ref_name.exclude = []`                                                                                                         |
+| `enforce_admins = false` (implicit, blanket bypass)                                                                    | `bypass_actors { actor_type = "User", actor_id = <your numeric GitHub user ID, e.g. via data.github_user.self.id>, bypass_mode = "always" }` (explicit, audited)                                |
 
 Also required on every ruleset (no classic-protection equivalent to port from, just required by the
 resource itself): top-level `enforcement = "active"`, `target = "branch"`, `name`, `repository`.
