@@ -21,6 +21,10 @@ jobs:
       # this sha256 (from the release's published digest and checksums.txt).
       BETTERLEAKS_VERSION: 1.3.1
       BETTERLEAKS_SHA256: 7b241c80204538cbb210c94514dc7cdff86430938bd7d5b6e289207959530849
+      # Single source of truth for the Go-built tool: feeds both the cache
+      # key and `go install`, so a bump here rebuilds instead of restoring
+      # a stale binary.
+      YAMLFMT_VERSION: v0.21.0
     steps:
       # Full history: the PR secret scan below needs origin/<base> and the PR's
       # commits, not only the merged tree.
@@ -80,12 +84,37 @@ jobs:
       - uses: opentofu/setup-opentofu@v1
         with:
           tofu_version: 1.12.0
-      - name: Install the tools the repo:local hooks call
+      # yamlfmt is compiled from source by `go install`, which dominates the
+      # tool-install time -- cache the built binary instead.
+      - name: Cache yamlfmt
+        id: go-tools
+        uses: actions/cache@v4
+        with:
+          path: ~/go/bin
+          key: go-tools-${{ runner.os }}-yamlfmt-${{ env.YAMLFMT_VERSION }}
+      - name: Build yamlfmt (cache miss only)
+        if: steps.go-tools.outputs.cache-hit != 'true'
         run: |
           set -euo pipefail
-          go install github.com/google/yamlfmt/cmd/yamlfmt@v0.21.0
+          go install "github.com/google/yamlfmt/cmd/yamlfmt@${YAMLFMT_VERSION}"
+      - name: Install the other tools the repo:local hooks call
+        run: |
+          set -euo pipefail
           pip install yamllint==1.35.1 pre-commit
           echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
+      # pre-commit builds a venv per hook repo (mdformat + its plugin, the
+      # hygiene hooks) and compiles betterleaks. Keyed on the config, so any
+      # hook `rev` or additional_dependencies change rebuilds them. The
+      # interpreter hash guards against restoring venvs built by an older
+      # runner Python.
+      - name: Fingerprint the Python interpreter
+        id: py
+        run: echo "hash=$(python -VV | sha256sum | cut -c1-12)" >> "$GITHUB_OUTPUT"
+      - name: Cache pre-commit environments
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pre-commit
+          key: pre-commit-${{ runner.os }}-${{ steps.py.outputs.hash }}-${{ hashFiles('.pre-commit-config.yaml') }}
       - name: pre-commit run --all-files
         env:
           # betterleaks is skipped here only: its hook scans staged changes, so
