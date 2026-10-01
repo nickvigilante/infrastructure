@@ -34,6 +34,10 @@ resource "tailscale_acl" "main" {
       # admins can apply this tag — prevents a random tailnet member from
       # spoofing a homelab node.
       "tag:homelab" = ["autogroup:admin"]
+      # GitHub Actions runners that join the tailnet (the Tailscale OAuth
+      # client "GitHub Actions CI") to reach Coder. Added in the admin UI
+      # on 2026-09-21 and back-ported here so an apply doesn't delete it.
+      "tag:ci" = ["autogroup:admin"]
     }
 
     acls = [
@@ -66,6 +70,14 @@ resource "tailscale_acl" "main" {
         action = "accept"
         src    = ["autogroup:member"]
         dst    = ["autogroup:internet:*"]
+      },
+      # CI runners reach exactly one thing: Coder's HTTPS endpoint on gandalf's
+      # tailnet address, so homelab-dev-templates CI can validate and push
+      # templates. Nothing else on the homelab side is reachable from tag:ci.
+      {
+        action = "accept"
+        src    = ["tag:ci"]
+        dst    = ["100.92.2.25:443"]
       },
     ]
 
