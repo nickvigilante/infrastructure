@@ -33,10 +33,14 @@ resource "github_repository_vulnerability_alerts" "this" {
   repository = github_repository.this.name
 }
 
+# GitHub rejects enabling security updates (422) until vulnerability alerts
+# are on, so this must wait for that resource instead of running alongside it.
 resource "github_repository_dependabot_security_updates" "this" {
   count      = var.settings.dependabot_security_updates ? 1 : 0
   repository = github_repository.this.name
   enabled    = true
+
+  depends_on = [github_repository_vulnerability_alerts.this]
 }
 
 locals {
