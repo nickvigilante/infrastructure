@@ -25,5 +25,9 @@ module "repo_sember" {
   settings = merge(local.repo_defaults, {
     description = "Semantic line breaks for cleaner text and smaller, more manageable diffs."
     topics      = ["rust", "cli", "markdown", "formatter", "semantic-line-breaks"]
+
+    # The single job in sember's .github/workflows/ci.yml: fmt, clippy,
+    # tests, the MSRV build and sember --check on its own README.
+    required_status_check_contexts = ["ci"]
   })
 }
