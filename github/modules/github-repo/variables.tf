@@ -33,6 +33,11 @@ variable "settings" {
     required_status_checks_strict   = bool
     required_status_check_contexts  = list(string)
   })
+
+  validation {
+    condition     = !var.settings.dependabot_security_updates || var.settings.vulnerability_alerts
+    error_message = "dependabot_security_updates requires vulnerability_alerts = true; GitHub rejects security updates while alerts are off."
+  }
 }
 
 variable "bypass_actor_id" {
