@@ -71,26 +71,15 @@ The workflow init's against the Storj state, plans, and (if not dry-run) applies
 | `backend.tf`   | Storj S3 backend (`s3://nickvigilante-tfstate/homelab/terraform.tfstate`) |
 | `providers.tf` | tailscale + github provider configs                                       |
 | `variables.tf` | Input variables (all sourced from env via `TF_VAR_*`)                     |
-| `locals.tf`    | Per-repo configuration map; add new repos here                            |
+| `locals.tf`    | Classic branch-protection settings per repo (transitional)                |
 | `tailscale.tf` | Tailnet DNS settings                                                      |
-| `github.tf`    | Repo settings, branch protection, Actions secrets                         |
-| `outputs.tf`   | Useful outputs (managed repo list, protected repo list)                   |
+| `github.tf`    | Classic branch protection (transitional), Actions secrets                 |
+| `outputs.tf`   | Useful outputs (protected repo list)                                      |
 
 ## Importing existing resources on first apply
-
-GitHub repos already exist; this context **creates them on first apply if missing, or you import them**. Easier path is to import them so Tofu picks up current state:
-
-```bash
-# Run once after `tofu init`, before `tofu apply`:
-for repo in infrastructure dotfiles puzzles tuile docs passgen styleguide vale-languagetool tools; do
-  tofu import "github_repository.managed[\"$repo\"]" "$repo"
-done
-```
 
 Tailnet DNS settings are singleton — Tofu manages a single resource that overwrites whatever's in the admin UI. No import needed; the first `tofu apply` will replace the current Global Nameserver setting with whatever's in `tailscale.tf` (currently the same `100.92.2.25` you already set manually).
 
 ## Adding a new repo
 
-1. Add an entry to `local.repos` in `locals.tf`.
-2. `tofu plan` — confirms the create or import is what you expect.
-3. `tofu import` (for existing) or `tofu apply` (for create new).
+GitHub repos are managed by the `github/` context: add a `github/repo_personal_<name>.tf` file there.

@@ -1,56 +1,51 @@
-# Managed repos. Each one is either created (if missing) or imported on first
-# apply. Settings derive from local.repos_resolved.
-#
-# IMPORTANT: lifecycle.prevent_destroy on every repo. `tofu destroy` will refuse
-# to delete a managed repository. To actually delete a repo you must first
-# remove the prevent_destroy attribute, apply, then destroy.
-resource "github_repository" "managed" {
-  for_each = local.repos_resolved
+# Repos and their vulnerability alerts now live in github/ (one file per
+# repo). These blocks drop them from this context's state without calling
+# GitHub, so nothing is disabled or deleted -- see
+# docs/plans/2026-09-27-github-config-management.md, Chunk C.
+removed {
+  from = github_repository.managed
 
-  name        = each.key
-  description = each.value.description
-  topics      = each.value.topics
-
-  visibility                  = each.value.visibility
-  has_issues                  = each.value.has_issues
-  has_projects                = each.value.has_projects
-  has_wiki                    = each.value.has_wiki
-  has_discussions             = each.value.has_discussions
-  allow_squash_merge          = each.value.allow_squash_merge
-  allow_merge_commit          = each.value.allow_merge_commit
-  allow_rebase_merge          = each.value.allow_rebase_merge
-  allow_auto_merge            = each.value.allow_auto_merge
-  delete_branch_on_merge      = each.value.delete_branch_on_merge
-  web_commit_signoff_required = each.value.web_commit_signoff_required
-
-  # `vulnerability_alerts` is managed by the dedicated
-  # `github_repository_vulnerability_alerts` resource below, not here. The
-  # deprecated argument is left unset and no longer referenced (it was only
-  # named in ignore_changes, which is what surfaced its deprecation warning).
   lifecycle {
-    prevent_destroy = true
+    destroy = false
   }
 }
 
-# Dependabot vulnerability alerts. Migrated out of the deprecated
-# `github_repository.vulnerability_alerts` argument per provider guidance.
-resource "github_repository_vulnerability_alerts" "alerts" {
+removed {
+  from = github_repository_vulnerability_alerts.alerts
+
+  lifecycle {
+    destroy = false
+  }
+}
+
+removed {
+  from = github_repository_environment.homelab_apply
+
+  lifecycle {
+    destroy = false
+  }
+}
+
+data "github_repository" "classic_protected" {
   for_each = {
     for name, cfg in local.repos_resolved : name => cfg
-    if cfg.vulnerability_alerts
+    if cfg.protect_main
   }
 
-  repository = github_repository.managed[each.key].name
+  name = each.key
 }
 
-# Branch protection on `main` for every repo where protect_main = true.
+# Classic branch protection on `main` for every repo where protect_main = true.
+# Transitional: github/ now adds a ruleset to each of these repos, and GitHub
+# enforces the union of both. Delete this once the rulesets are verified
+# (Chunk D), leaving the rulesets to protect `main` alone.
 resource "github_branch_protection" "main" {
   for_each = {
     for name, cfg in local.repos_resolved : name => cfg
     if cfg.protect_main
   }
 
-  repository_id                   = github_repository.managed[each.key].node_id
+  repository_id                   = data.github_repository.classic_protected[each.key].node_id
   pattern                         = "main"
   enforce_admins                  = false # allow you to bypass in emergencies
   require_conversation_resolution = each.value.require_conversation_resolution
@@ -78,14 +73,17 @@ resource "github_branch_protection" "main" {
 
 # Actions secrets for the infrastructure repo so its CI plan workflow can run.
 # Source values come from the same env vars the local user already exports.
+# These stay here even though the repo object moved to github/: github-plan's
+# CI has none of the Tailscale or AWS values, and importing a secret can't
+# read its value back, so moving them would recreate every live secret.
 resource "github_actions_secret" "tailscale_oauth_client_id" {
-  repository  = github_repository.managed["infrastructure"].name
+  repository  = "infrastructure"
   secret_name = "TAILSCALE_OAUTH_CLIENT_ID"
   value       = var.tailscale_oauth_client_id
 }
 
 resource "github_actions_secret" "tailscale_oauth_client_secret" {
-  repository  = github_repository.managed["infrastructure"].name
+  repository  = "infrastructure"
   secret_name = "TAILSCALE_OAUTH_CLIENT_SECRET"
   value       = var.tailscale_oauth_client_secret
 }
@@ -105,13 +103,13 @@ variable "ci_aws_secret_access_key" {
 }
 
 resource "github_actions_secret" "aws_access_key_id" {
-  repository  = github_repository.managed["infrastructure"].name
+  repository  = "infrastructure"
   secret_name = "AWS_ACCESS_KEY_ID"
   value       = var.ci_aws_access_key_id
 }
 
 resource "github_actions_secret" "aws_secret_access_key" {
-  repository  = github_repository.managed["infrastructure"].name
+  repository  = "infrastructure"
   secret_name = "AWS_SECRET_ACCESS_KEY"
   value       = var.ci_aws_secret_access_key
 }
@@ -120,13 +118,13 @@ resource "github_actions_secret" "aws_secret_access_key" {
 # In CI we use actions/create-github-app-token to mint a short-lived token from
 # these; we don't pass the PEM to Tofu directly in CI.
 resource "github_actions_secret" "github_app_id" {
-  repository  = github_repository.managed["infrastructure"].name
+  repository  = "infrastructure"
   secret_name = "TF_GITHUB_APP_ID"
   value       = var.github_app_id
 }
 
 resource "github_actions_secret" "github_app_installation_id" {
-  repository  = github_repository.managed["infrastructure"].name
+  repository  = "infrastructure"
   secret_name = "TF_GITHUB_APP_INSTALLATION_ID"
   value       = var.github_app_installation_id
 }
@@ -138,41 +136,7 @@ variable "github_app_pem_contents" {
 }
 
 resource "github_actions_secret" "github_app_private_key" {
-  repository  = github_repository.managed["infrastructure"].name
+  repository  = "infrastructure"
   secret_name = "TF_GITHUB_APP_PRIVATE_KEY"
   value       = var.github_app_pem_contents
-}
-
-# ---------------------------------------------------------------------------
-# Approval gate for the homelab-apply workflow.
-#
-# The workflow runs `tofu apply` against this very context, so an unattended
-# dispatch could overwrite tailnet config or GitHub repo settings before you
-# notice. The environment forces a manual approval click in the Actions UI
-# before apply runs. The plan workflow (PR CI) is unaffected — it doesn't
-# reference an environment.
-#
-# Repo-level Actions secrets above remain in place: the plan workflow needs
-# them, and environment secrets would override them at apply time anyway if
-# we ever want stronger isolation.
-# ---------------------------------------------------------------------------
-data "github_user" "self" {
-  username = var.github_owner
-}
-
-resource "github_repository_environment" "homelab_apply" {
-  repository  = github_repository.managed["infrastructure"].name
-  environment = "homelab-apply"
-
-  reviewers {
-    users = [data.github_user.self.id]
-  }
-
-  # Only protected branches (main) can target this environment. Combined
-  # with `on: workflow_dispatch`, this means an apply can only be launched
-  # from main — feature-branch dispatches will be rejected.
-  deployment_branch_policy {
-    protected_branches     = true
-    custom_branch_policies = false
-  }
 }

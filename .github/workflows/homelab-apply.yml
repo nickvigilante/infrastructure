@@ -26,8 +26,9 @@ jobs:
     name: homelab-apply
     runs-on: ubuntu-latest
     # Approval gate. The `homelab-apply` environment is defined in
-    # homelab/github.tf with a required reviewer (you), so the run pauses
-    # at the start of this job until approved in the Actions UI.
+    # github/repo_personal_infrastructure.tf with a required reviewer (you),
+    # so the run pauses at the start of this job until approved in the
+    # Actions UI. It only accepts deployments from main.
     environment: homelab-apply
     defaults:
       run:
