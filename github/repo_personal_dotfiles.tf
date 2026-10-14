@@ -8,6 +8,13 @@ import {
   id = "dotfiles"
 }
 
+# The `main` ruleset was created by hand before this context managed it, so
+# adopt it rather than create a second one (GitHub rejects duplicate names).
+import {
+  to = module.repo_dotfiles.github_repository_ruleset.main[0]
+  id = "dotfiles:24078683"
+}
+
 module "repo_dotfiles" {
   source = "./modules/github-repo"
 
@@ -21,5 +28,7 @@ module "repo_dotfiles" {
   settings = merge(local.repo_defaults, {
     description = "Configuration files for development environment"
     topics      = ["dotfiles", "zsh", "shell-config"]
+
+    required_status_check_contexts = ["ci"]
   })
 }

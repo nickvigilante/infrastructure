@@ -16,13 +16,10 @@ locals {
     required_status_check_contexts  = [] # repo-specific overrides
   }
 
+  # infrastructure, dotfiles and homelab are absent on purpose: their classic
+  # protection was already replaced by hand-made rulesets, which github/ now
+  # imports.
   repos = {
-    infrastructure = {
-      # Workflow name "homelab-plan" matches the job in
-      # .github/workflows/homelab-plan.yml.
-      required_status_check_contexts = ["homelab-plan"]
-    }
-    dotfiles            = {}
     puzzles             = {}
     tuile               = {}
     docs                = {}
@@ -30,7 +27,6 @@ locals {
     styleguide          = {}
     "vale-languagetool" = {}
     tools               = {}
-    homelab             = {}
   }
 
   repos_resolved = {

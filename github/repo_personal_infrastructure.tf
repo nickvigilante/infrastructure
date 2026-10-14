@@ -8,6 +8,13 @@ import {
   id = "infrastructure"
 }
 
+# The `main` ruleset was created by hand before this context managed it, so
+# adopt it rather than create a second one (GitHub rejects duplicate names).
+import {
+  to = module.repo_infrastructure.github_repository_ruleset.main[0]
+  id = "infrastructure:23691967"
+}
+
 module "repo_infrastructure" {
   source = "./modules/github-repo"
 
@@ -25,7 +32,13 @@ module "repo_infrastructure" {
     # Both plan workflows always run and report (their tofu steps are gated
     # on path detection instead), so requiring them never blocks a PR that
     # doesn't touch their context.
-    required_status_check_contexts = ["homelab-plan", "github-plan"]
+    required_status_check_contexts = [
+      "homelab-plan",
+      "github-plan",
+      "pre-commit (format + lint + secrets)",
+    ]
+    required_status_checks_strict = false
+    require_linear_history        = true
   })
 }
 
