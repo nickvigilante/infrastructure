@@ -18,7 +18,7 @@ module "repo_misura" {
   bypass_actor_id = tonumber(data.github_user.personal_self.id)
 
   settings = merge(local.repo_defaults, {
-    description = "Where an HTTP request spends its time: DNS, TCP, TLS, waiting and transfer."
+    description = "httpstat-style request timing tool written in Rust"
     topics      = ["rust", "cli", "http", "latency", "curl"]
 
     # No CI workflow exists yet. Once one lands, require its summary job
