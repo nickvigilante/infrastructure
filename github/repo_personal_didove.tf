@@ -21,8 +21,9 @@ module "repo_didove" {
     description = "A useful alternative to 'which'."
     topics      = ["rust", "cli", "which", "path"]
 
-    # No CI workflow exists yet. Once one lands, require its summary job
-    # here, as repo_personal_sember.tf does with ["ci"].
-    required_status_check_contexts = []
+    # The final job of didove's .github/workflows/ci.yml, named "ci". It
+    # needs the whole test matrix (ubuntu and macos: fmt, clippy, tests and
+    # the MSRV check), so requiring it alone gates the lot.
+    required_status_check_contexts = ["ci"]
   })
 }
