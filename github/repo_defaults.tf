@@ -18,6 +18,8 @@ locals {
     vulnerability_alerts        = true
     dependabot_security_updates = true
     web_commit_signoff_required = false
+    is_template                 = false
+    auto_init                   = false
 
     # Branch protection defaults (applied to `main` of every repo unless
     # protect_main = false), enforced via github_repository_ruleset instead

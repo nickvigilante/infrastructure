@@ -22,6 +22,8 @@ variable "settings" {
     vulnerability_alerts        = bool
     dependabot_security_updates = bool
     web_commit_signoff_required = bool
+    is_template                 = bool
+    auto_init                   = bool
 
     protect_main                    = bool
     require_conversation_resolution = bool
@@ -43,4 +45,13 @@ variable "settings" {
 variable "bypass_actor_id" {
   description = "Numeric GitHub user ID allowed to bypass this repo's ruleset in an emergency (bypass_mode = \"always\"). Replaces classic branch_protection's blanket enforce_admins = false with an explicit, audited actor."
   type        = number
+}
+
+variable "template" {
+  description = "Template repository to create this repo from, or null. Only used when the repo is created; adopted (imported) repos leave it null."
+  type = object({
+    owner      = string
+    repository = string
+  })
+  default = null
 }
