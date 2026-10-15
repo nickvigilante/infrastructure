@@ -28,5 +28,8 @@ module "repo_passgen" {
   settings = merge(local.repo_defaults, {
     description = "A lightweight, cryptographically secure password generator written in Rust."
     topics      = ["rust", "cli", "password-generator", "security"]
+
+    # Kept from the hand-made ruleset this adopts.
+    require_linear_history = true
   })
 }
