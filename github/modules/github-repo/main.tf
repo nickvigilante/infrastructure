@@ -23,6 +23,23 @@ resource "github_repository" "this" {
   delete_branch_on_merge      = var.settings.delete_branch_on_merge
   web_commit_signoff_required = var.settings.web_commit_signoff_required
 
+  # A template repo is one other repos are created from. auto_init gives a
+  # repo created here (rather than adopted with an import block) a first
+  # commit, so its main branch exists for PRs; it only acts at creation.
+  is_template = var.settings.is_template
+  auto_init   = var.settings.auto_init
+
+  # Create the repo from a template. Only acts at creation: GitHub copies
+  # the template's files into the new repo once, and later edits to the
+  # template don't flow into repos already made from it.
+  dynamic "template" {
+    for_each = var.template == null ? [] : [var.template]
+    content {
+      owner      = template.value.owner
+      repository = template.value.repository
+    }
+  }
+
   lifecycle {
     prevent_destroy = true
   }
