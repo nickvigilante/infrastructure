@@ -61,6 +61,9 @@ resource "github_repository_dependabot_security_updates" "this" {
 }
 
 locals {
+  # The GitHub Actions app's ID, the same on every github.com account.
+  github_actions_app_id = 15368
+
   # allowed_merge_methods is required by the ruleset's pull_request rule
   # (min 1 entry) -- derived from the same three repo-level merge-method
   # booleans rather than duplicated as a separate setting, so the two can't
@@ -123,10 +126,15 @@ resource "github_repository_ruleset" "main" {
       content {
         strict_required_status_checks_policy = var.settings.required_status_checks_strict
 
+        # Every required check is a GitHub Actions job, so only accept it
+        # from the Actions app. Without integration_id, any app (or anyone
+        # with commit-status access) could report a passing check of the
+        # same name.
         dynamic "required_check" {
           for_each = var.settings.required_status_check_contexts
           content {
-            context = required_check.value
+            context        = required_check.value
+            integration_id = local.github_actions_app_id
           }
         }
       }
