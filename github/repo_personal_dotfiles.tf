@@ -1,4 +1,4 @@
-# nickvigilante/dotfiles: Configuration files for development environment.
+# nickvigilante/dotfiles: Configuration files for development environments.
 
 # Moved from homelab/github.tf: the import adopts the repo already in
 # homelab's state, and homelab/ forgets it via a removed block (see
@@ -26,8 +26,8 @@ module "repo_dotfiles" {
   bypass_actor_id = tonumber(data.github_user.personal_self.id)
 
   settings = merge(local.repo_defaults, {
-    description = "Configuration files for development environment"
-    topics      = ["dotfiles", "zsh", "shell-config"]
+    description = "Configuration files for development environments"
+    topics      = ["chezmoi", "dotfiles", "zsh", "shell-config"]
 
     required_status_check_contexts = ["ci"]
   })
