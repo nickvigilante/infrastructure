@@ -8,6 +8,13 @@ import {
   id = "passgen"
 }
 
+# The `main` ruleset was created by hand before this context managed it, so
+# adopt it rather than create a second one (GitHub rejects duplicate names).
+import {
+  to = module.repo_passgen.github_repository_ruleset.main[0]
+  id = "passgen:6250510"
+}
+
 module "repo_passgen" {
   source = "./modules/github-repo"
 
