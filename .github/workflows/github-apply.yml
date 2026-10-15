@@ -25,13 +25,9 @@ jobs:
   apply:
     name: github-apply
     runs-on: ubuntu-latest
-    # Approval gate. The `github-apply` environment is created in Chunk C
-    # once this context manages the infrastructure repo's own object (same
-    # pattern as homelab-apply's environment, defined in homelab/github.tf).
-    # Referencing it here ahead of that is harmless -- GitHub just treats an
-    # environment name with no matching resource as having no protection
-    # rules yet, so this becomes a real approval gate the moment Chunk C
-    # lands.
+    # Approval gate. The `github-apply` environment is defined in
+    # github/repo_personal_infrastructure.tf and only accepts deployments
+    # from main.
     environment: github-apply
     defaults:
       run:
