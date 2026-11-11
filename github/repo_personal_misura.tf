@@ -21,8 +21,7 @@ module "repo_misura" {
     description = "httpstat-style request timing tool written in Rust"
     topics      = ["rust", "cli", "http", "latency", "curl"]
 
-    # No CI workflow exists yet. Once one lands, require its summary job
-    # here, as repo_personal_didove.tf does with ["ci"].
-    required_status_check_contexts = []
+    # misura's CI ends in a summary job named ci (nickvigilante/misura#1).
+    required_status_check_contexts = ["ci"]
   })
 }
