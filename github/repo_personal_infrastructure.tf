@@ -15,6 +15,13 @@ import {
   id = "infrastructure:23691967"
 }
 
+# The all-branches signed-commits ruleset was created by hand on 2026-11-17,
+# before the module managed one, so adopt it rather than create a duplicate.
+import {
+  to = module.repo_infrastructure.github_repository_ruleset.signed_commits[0]
+  id = "infrastructure:27495384"
+}
+
 module "repo_infrastructure" {
   source = "./modules/github-repo"
 
@@ -37,8 +44,7 @@ module "repo_infrastructure" {
       "github-plan",
       "pre-commit (format + lint + secrets)",
     ]
-    required_status_checks_strict = false
-    require_linear_history        = true
+    require_linear_history = true
   })
 }
 

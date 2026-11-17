@@ -15,6 +15,13 @@ import {
   id = "homelab:24283576"
 }
 
+# The all-branches signed-commits ruleset was created by hand on 2026-11-17,
+# before the module managed one, so adopt it rather than create a duplicate.
+import {
+  to = module.repo_homelab.github_repository_ruleset.signed_commits[0]
+  id = "homelab:27495381"
+}
+
 module "repo_homelab" {
   source = "./modules/github-repo"
 

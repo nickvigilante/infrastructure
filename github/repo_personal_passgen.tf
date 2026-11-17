@@ -15,6 +15,13 @@ import {
   id = "passgen:6250510"
 }
 
+# The all-branches signed-commits ruleset was created by hand on 2026-11-17,
+# before the module managed one, so adopt it rather than create a duplicate.
+import {
+  to = module.repo_passgen.github_repository_ruleset.signed_commits[0]
+  id = "passgen:27495387"
+}
+
 module "repo_passgen" {
   source = "./modules/github-repo"
 
