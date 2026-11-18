@@ -15,6 +15,13 @@ import {
   id = "dotfiles:24078683"
 }
 
+# The all-branches signed-commits ruleset was created by hand on 2026-11-17,
+# before the module managed one, so adopt it rather than create a duplicate.
+import {
+  to = module.repo_dotfiles.github_repository_ruleset.signed_commits[0]
+  id = "dotfiles:27495378"
+}
+
 module "repo_dotfiles" {
   source = "./modules/github-repo"
 

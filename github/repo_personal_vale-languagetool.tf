@@ -8,6 +8,13 @@ import {
   id = "vale-languagetool"
 }
 
+# The all-branches signed-commits ruleset was created by hand on 2026-11-17,
+# before the module managed one, so adopt it rather than create a duplicate.
+import {
+  to = module.repo_vale_languagetool.github_repository_ruleset.signed_commits[0]
+  id = "vale-languagetool:27495405"
+}
+
 module "repo_vale_languagetool" {
   source = "./modules/github-repo"
 

@@ -8,6 +8,13 @@ import {
   id = "styleguide"
 }
 
+# The all-branches signed-commits ruleset was created by hand on 2026-11-17,
+# before the module managed one, so adopt it rather than create a duplicate.
+import {
+  to = module.repo_styleguide.github_repository_ruleset.signed_commits[0]
+  id = "styleguide:27495393"
+}
+
 module "repo_styleguide" {
   source = "./modules/github-repo"
 

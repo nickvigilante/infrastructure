@@ -8,6 +8,13 @@ import {
   id = "tuile"
 }
 
+# The all-branches signed-commits ruleset was created by hand on 2026-11-17,
+# before the module managed one, so adopt it rather than create a duplicate.
+import {
+  to = module.repo_tuile.github_repository_ruleset.signed_commits[0]
+  id = "tuile:27495398"
+}
+
 module "repo_tuile" {
   source = "./modules/github-repo"
 

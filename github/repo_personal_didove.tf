@@ -7,6 +7,13 @@ import {
   id = "didove"
 }
 
+# The all-branches signed-commits ruleset was created by hand on 2026-11-17,
+# before the module managed one, so adopt it rather than create a duplicate.
+import {
+  to = module.repo_didove.github_repository_ruleset.signed_commits[0]
+  id = "didove:27495376"
+}
+
 module "repo_didove" {
   source = "./modules/github-repo"
 

@@ -75,6 +75,31 @@ locals {
   ])
 }
 
+# Signed commits on every branch, not only the default one, so an unsigned
+# push is refused immediately instead of surfacing at merge time. No bypass
+# actors on purpose: getting around it means editing the ruleset. The main
+# ruleset below also sets required_signatures, which documents the rule where
+# the rest of main's protection lives.
+resource "github_repository_ruleset" "signed_commits" {
+  count = var.settings.require_signed_commits ? 1 : 0
+
+  name        = "signed-commits"
+  repository  = github_repository.this.name
+  target      = "branch"
+  enforcement = "active"
+
+  conditions {
+    ref_name {
+      include = ["~ALL"]
+      exclude = []
+    }
+  }
+
+  rules {
+    required_signatures = true
+  }
+}
+
 # Branch protection on the default branch, via a repository ruleset instead
 # of classic github_branch_protection -- see the field-mapping table in
 # docs/plans/2026-09-27-github-config-management.md (Chunk D) for the

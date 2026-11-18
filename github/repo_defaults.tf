@@ -30,10 +30,16 @@ locals {
     require_conversation_resolution = true
     required_approving_review_count = 0 # solo, no co-reviewers to block on
     dismiss_stale_reviews           = false
-    require_signed_commits          = false
-    require_code_owner_reviews      = false
-    require_linear_history          = false
-    required_status_checks_strict   = true
-    required_status_check_contexts  = [] # repo-specific overrides
+    # Signed commits everywhere: besides required_signatures on the main
+    # ruleset, the module adds a separate all-branches ruleset, so an
+    # unsigned push is refused on the spot rather than at merge time.
+    require_signed_commits     = true
+    require_code_owner_reviews = false
+    require_linear_history     = false
+    # Not strict: with squash merges GitHub's "update with merge commit"
+    # never reaches main, and "update with rebase" is unavailable anyway
+    # because GitHub cannot sign the rewritten commits.
+    required_status_checks_strict  = false
+    required_status_check_contexts = [] # repo-specific overrides
   }
 }

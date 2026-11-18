@@ -7,6 +7,13 @@ import {
   id = "misura"
 }
 
+# The all-branches signed-commits ruleset was created by hand on 2026-11-17,
+# before the module managed one, so adopt it rather than create a duplicate.
+import {
+  to = module.repo_misura.github_repository_ruleset.signed_commits[0]
+  id = "misura:27495385"
+}
+
 module "repo_misura" {
   source = "./modules/github-repo"
 
