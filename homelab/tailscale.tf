@@ -77,7 +77,7 @@ resource "tailscale_acl" "main" {
       {
         action = "accept"
         src    = ["tag:ci"]
-        dst    = ["100.92.2.25:443"]
+        dst    = ["100.71.63.31:443"]
       },
     ]
 
@@ -100,14 +100,9 @@ resource "tailscale_acl" "main" {
       },
     ]
 
-    nodeAttrs = [
-      # Tailscale Funnel — let members expose their own devices to the
-      # public internet. Carried over from the admin UI default.
-      {
-        target = ["autogroup:member"]
-        attr   = ["funnel"]
-      },
-    ]
+    # No nodeAttrs: Tailscale Funnel (publishing a device to the public
+    # internet) is deliberately not granted. Nothing under vigihome.net may
+    # be publicly reachable, so no member should be able to enable it.
 
     # autoApprovers — routes that don't need a human in the admin UI
     # to click "Approve" on. Scoped narrowly: any device tagged

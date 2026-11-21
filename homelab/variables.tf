@@ -37,5 +37,5 @@ variable "github_app_pem_file" {
 variable "homelab_dns_nameserver_ip" {
   description = "Tailscale IP of the node running Pi-hole. Used as the tailnet's Global Nameserver."
   type        = string
-  default     = "100.92.2.25" # gandalf
+  default     = "100.71.63.31" # gandalf
 }
