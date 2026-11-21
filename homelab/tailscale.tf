@@ -71,6 +71,19 @@ resource "tailscale_acl" "main" {
         src    = ["autogroup:member"]
         dst    = ["autogroup:internet:*"]
       },
+      # Tailnet members reach gandalf's own LAN address through the
+      # 192.168.50.135/32 route that gandalf advertises (see autoApprovers).
+      # Pi-hole answers *.vigihome.net with this LAN address first and the
+      # tailnet address second, and some browsers (Firefox) wait out a
+      # connect timeout on the first answer before trying the second.
+      # Making the LAN address reachable off-LAN removes that stall for
+      # every client. A tag destination only covers a node's own tailnet
+      # addresses, not routes it advertises, so the route needs its own rule.
+      {
+        action = "accept"
+        src    = ["autogroup:member"]
+        dst    = ["192.168.50.135:*"]
+      },
       # CI runners reach exactly one thing: Coder's HTTPS endpoint on gandalf's
       # tailnet address, so homelab-dev-templates CI can validate and push
       # templates. Nothing else on the homelab side is reachable from tag:ci.
@@ -114,8 +127,14 @@ resource "tailscale_acl" "main" {
     # Tag-gated by design: only nodes we've already vouched for (via
     # the auth-key + ansible flow that applies tag:homelab) can self-
     # approve exit routing. A random tailnet member device can't.
+    #
+    # The one subnet route is gandalf's own LAN address, a single /32 and not
+    # the LAN. Only tag:homelab nodes can advertise it without a human click.
     autoApprovers = {
       exitNode = ["tag:homelab"]
+      routes = {
+        "192.168.50.135/32" = ["tag:homelab"]
+      }
     }
   })
 }
